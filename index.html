@@ -1,0 +1,233 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Scribble — Pastel Sticky Notes</title>
+  <meta name="description" content="A minimalist, colourful pastel sticky notes web app to capture, flip, organise, and search your thoughts with ease.">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Roboto:wght@300;400;500;700&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="style.css">
+</head>
+<body>
+  <!-- Header Bar -->
+  <header class="app-header">
+    <div class="header-inner">
+      <div class="brand">
+        <div class="brand-icon" aria-hidden="true">
+          <span class="icon-sheet icon-sheet-1"></span>
+          <span class="icon-sheet icon-sheet-2"></span>
+        </div>
+        <div class="brand-text">
+          <h1 class="brand-title">Scribble</h1>
+          <span class="brand-tagline">Pastel Sticky Notes</span>
+        </div>
+      </div>
+
+      <div class="search-container">
+        <label for="search-input" class="visually-hidden">Search notes by title or content</label>
+        <div class="search-box">
+          <svg class="search-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+            <circle cx="11" cy="11" r="8"></circle>
+            <line x1="21" y1="21" x2="16.65" y2="16.65"></line>
+          </svg>
+          <input
+            type="search"
+            id="search-input"
+            class="search-input"
+            placeholder="Search notes..."
+            autocomplete="off"
+            spellcheck="false"
+          >
+          <button type="button" id="search-clear-btn" class="search-clear-btn" aria-label="Clear search text" hidden>
+            &times;
+          </button>
+        </div>
+      </div>
+
+      <div class="header-actions">
+        <button type="button" id="create-note-btn" class="btn btn-primary">
+          <svg class="btn-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+            <line x1="12" y1="5" x2="12" y2="19"></line>
+            <line x1="5" y1="12" x2="19" y2="12"></line>
+          </svg>
+          <span>New note</span>
+        </button>
+      </div>
+    </div>
+  </header>
+
+  <!-- Main Content Area -->
+  <main class="app-main">
+    <div class="main-container">
+      <!-- Notes Status / Counts -->
+      <section class="notes-meta-bar" aria-live="polite">
+        <div id="notes-counter" class="notes-counter">Loading notes...</div>
+      </section>
+
+      <!-- Sticky Notes Grid -->
+      <section id="notes-grid" class="notes-grid" aria-label="Sticky Notes Grid"></section>
+
+      <!-- Empty State (No notes created yet) -->
+      <div id="empty-state" class="state-message empty-state" hidden>
+        <div class="state-illustration" aria-hidden="true">
+          <div class="pastel-stack">
+            <div class="stack-card stack-card-3"></div>
+            <div class="stack-card stack-card-2"></div>
+            <div class="stack-card stack-card-1">
+              <span>✍️</span>
+            </div>
+          </div>
+        </div>
+        <h2 class="state-title">Your canvas is empty</h2>
+        <p class="state-description">Capture ideas, create to-do items, or write reminders. Sticky notes will appear right here.</p>
+        <button type="button" id="empty-create-btn" class="btn btn-primary">
+          <svg class="btn-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+            <line x1="12" y1="5" x2="12" y2="19"></line>
+            <line x1="5" y1="12" x2="19" y2="12"></line>
+          </svg>
+          <span>Create your first note</span>
+        </button>
+      </div>
+
+      <!-- Search No Results State -->
+      <div id="no-results-state" class="state-message no-results-state" hidden>
+        <div class="state-illustration" aria-hidden="true">
+          <div class="search-miss-icon">🔍</div>
+        </div>
+        <h2 class="state-title">No notes found</h2>
+        <p class="state-description">We couldn't find any notes matching "<span id="search-query-display" class="query-highlight"></span>".</p>
+        <button type="button" id="reset-search-btn" class="btn btn-secondary">
+          Clear search query
+        </button>
+      </div>
+    </div>
+  </main>
+
+  <!-- Note Editor Modal (Create & Edit) -->
+  <div id="note-modal" class="modal-backdrop" role="dialog" aria-modal="true" aria-labelledby="modal-title" hidden>
+    <div class="modal-dialog">
+      <div class="modal-card" id="modal-card-preview">
+        <div class="modal-header">
+          <h2 id="modal-title" class="modal-title">New Note</h2>
+          <button type="button" id="modal-close-btn" class="modal-icon-btn" aria-label="Close dialog">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+              <line x1="18" y1="6" x2="6" y2="18"></line>
+              <line x1="6" y1="6" x2="18" y2="18"></line>
+            </svg>
+          </button>
+        </div>
+
+        <form id="note-form" class="modal-form" novalidate>
+          <input type="hidden" id="note-id-input" value="">
+
+          <!-- Error Alert Banner -->
+          <div id="form-error" class="form-error-banner" role="alert" hidden>
+            Please provide either a title or note content before saving.
+          </div>
+
+          <div class="form-field">
+            <label for="note-title-input" class="form-label">Title</label>
+            <input
+              type="text"
+              id="note-title-input"
+              class="form-input"
+              placeholder="e.g., Grocery List or Project Idea"
+              maxlength="100"
+            >
+          </div>
+
+          <div class="form-field">
+            <label for="note-content-input" class="form-label">Content</label>
+            <textarea
+              id="note-content-input"
+              class="form-textarea"
+              placeholder="Jot down your thoughts here..."
+              rows="6"
+            ></textarea>
+          </div>
+
+          <!-- Pastel Colour Selection -->
+          <div class="form-field">
+            <label id="colour-label" class="form-label">Note Colour</label>
+            <div class="colour-picker" role="radiogroup" aria-labelledby="colour-label">
+              <label class="colour-option" title="Pastel Yellow">
+                <input type="radio" name="note-colour" value="#FFF2B2" class="colour-radio" checked>
+                <span class="colour-swatch" style="background-color: #FFF2B2;"></span>
+                <span class="visually-hidden">Yellow</span>
+              </label>
+
+              <label class="colour-option" title="Pastel Pink">
+                <input type="radio" name="note-colour" value="#FFDCE5" class="colour-radio">
+                <span class="colour-swatch" style="background-color: #FFDCE5;"></span>
+                <span class="visually-hidden">Pink</span>
+              </label>
+
+              <label class="colour-option" title="Pastel Blue">
+                <input type="radio" name="note-colour" value="#D9ECFF" class="colour-radio">
+                <span class="colour-swatch" style="background-color: #D9ECFF;"></span>
+                <span class="visually-hidden">Blue</span>
+              </label>
+
+              <label class="colour-option" title="Pastel Mint">
+                <input type="radio" name="note-colour" value="#D8F5DF" class="colour-radio">
+                <span class="colour-swatch" style="background-color: #D8F5DF;"></span>
+                <span class="visually-hidden">Mint</span>
+              </label>
+
+              <label class="colour-option" title="Pastel Lavender">
+                <input type="radio" name="note-colour" value="#E9DFFF" class="colour-radio">
+                <span class="colour-swatch" style="background-color: #E9DFFF;"></span>
+                <span class="visually-hidden">Lavender</span>
+              </label>
+
+              <label class="colour-option" title="Pastel Peach">
+                <input type="radio" name="note-colour" value="#FFE2CC" class="colour-radio">
+                <span class="colour-swatch" style="background-color: #FFE2CC;"></span>
+                <span class="visually-hidden">Peach</span>
+              </label>
+            </div>
+          </div>
+
+          <div class="modal-actions">
+            <button type="button" id="modal-cancel-btn" class="btn btn-secondary">Cancel</button>
+            <button type="submit" id="modal-save-btn" class="btn btn-primary">Save Note</button>
+          </div>
+        </form>
+      </div>
+    </div>
+  </div>
+
+  <!-- Delete Confirmation Modal -->
+  <div id="delete-modal" class="modal-backdrop" role="alertdialog" aria-modal="true" aria-labelledby="delete-dialog-title" aria-describedby="delete-dialog-desc" hidden>
+    <div class="modal-dialog modal-dialog-sm">
+      <div class="modal-card">
+        <div class="modal-header">
+          <h2 id="delete-dialog-title" class="modal-title">Delete Note</h2>
+          <button type="button" id="delete-close-btn" class="modal-icon-btn" aria-label="Close dialog">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+              <line x1="18" y1="6" x2="6" y2="18"></line>
+              <line x1="6" y1="6" x2="18" y2="18"></line>
+            </svg>
+          </button>
+        </div>
+        <div class="modal-body">
+          <p id="delete-dialog-desc" class="delete-message">
+            Are you sure you want to delete <strong id="delete-note-target-title">this note</strong>? This action cannot be undone.
+          </p>
+        </div>
+        <div class="modal-actions">
+          <button type="button" id="delete-cancel-btn" class="btn btn-secondary">Cancel</button>
+          <button type="button" id="delete-confirm-btn" class="btn btn-danger">Delete</button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Accessible Toast Notification for Feedback -->
+  <div id="toast-container" class="toast-container" aria-live="polite" aria-atomic="true"></div>
+
+  <script src="script.js"></script>
+</body>
+</html>
