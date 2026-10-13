@@ -63,11 +63,33 @@
   const toastContainer = document.getElementById('toast-container');
 
   // ==========================================================================
+  // Visibility Helper
+  // Ensures elements are reliably toggled across all browsers & CSS display values
+  // ==========================================================================
+
+  function setElementVisibility(el, isVisible, defaultDisplay = '') {
+    if (!el) return;
+    if (isVisible) {
+      el.removeAttribute('hidden');
+      el.classList.remove('is-hidden');
+      if (defaultDisplay) {
+        el.style.setProperty('display', defaultDisplay, 'important');
+      } else {
+        el.style.removeProperty('display');
+      }
+    } else {
+      el.setAttribute('hidden', '');
+      el.classList.add('is-hidden');
+      el.style.setProperty('display', 'none', 'important');
+    }
+  }
+
+  // ==========================================================================
   // Storage & Persistence
   // ==========================================================================
 
   /**
-   * Safely loads notes from localStorage with validation
+   * Safely loads notes from localStorage with normalization
    * @returns {Array} List of validated note objects
    */
   function loadNotesFromStorage() {
@@ -82,17 +104,18 @@
         return [];
       }
 
-      // Validate each item to avoid corrupt items
-      return parsed.filter(item => {
-        return (
-          item &&
-          typeof item === 'object' &&
-          typeof item.id === 'string' &&
-          typeof item.title === 'string' &&
-          typeof item.content === 'string' &&
-          typeof item.color === 'string'
-        );
-      });
+      // Safely normalize each item so notes are never lost due to missing optional fields
+      return parsed.map(item => {
+        if (!item || typeof item !== 'object') return null;
+        return {
+          id: String(item.id || generateId()),
+          title: String(item.title != null ? item.title : ''),
+          content: String(item.content != null ? item.content : ''),
+          color: String(item.color || DEFAULT_COLOUR),
+          createdAt: item.createdAt || new Date().toISOString(),
+          updatedAt: item.updatedAt || item.createdAt || new Date().toISOString()
+        };
+      }).filter(Boolean);
     } catch (err) {
       console.error('Error loading notes from localStorage:', err);
       showToast('Could not read existing notes from storage.');
@@ -175,8 +198,8 @@
     // Filter notes
     const filteredNotes = notes.filter(note => {
       if (!trimmedQuery) return true;
-      const matchTitle = note.title.toLowerCase().includes(trimmedQuery);
-      const matchContent = note.content.toLowerCase().includes(trimmedQuery);
+      const matchTitle = (note.title || '').toLowerCase().includes(trimmedQuery);
+      const matchContent = (note.content || '').toLowerCase().includes(trimmedQuery);
       return matchTitle || matchContent;
     });
 
@@ -191,25 +214,29 @@
 
     // Handle View States
     if (notes.length === 0) {
+      // 1. Canvas is completely empty (no notes exist yet)
       notesGrid.innerHTML = '';
-      notesGrid.hidden = true;
-      emptyState.hidden = false;
-      noResultsState.hidden = true;
+      setElementVisibility(notesGrid, false);
+      setElementVisibility(emptyState, true, 'flex');
+      setElementVisibility(noResultsState, false);
       return;
     }
 
-    emptyState.hidden = true;
+    // Notes exist - canvas is definitely not empty!
+    setElementVisibility(emptyState, false);
 
     if (filteredNotes.length === 0) {
+      // 2. Search is active but produced 0 matches
       notesGrid.innerHTML = '';
-      notesGrid.hidden = true;
+      setElementVisibility(notesGrid, false);
       searchQueryDisplay.textContent = searchQuery.trim();
-      noResultsState.hidden = false;
+      setElementVisibility(noResultsState, true, 'flex');
       return;
     }
 
-    noResultsState.hidden = true;
-    notesGrid.hidden = false;
+    // 3. Notes found and displayed
+    setElementVisibility(noResultsState, false);
+    setElementVisibility(notesGrid, true, 'grid');
 
     // Clear and build cards safely using DOM methods
     notesGrid.innerHTML = '';
@@ -423,7 +450,7 @@
    */
   function openEditorModal(noteToEdit = null) {
     lastActiveElement = document.activeElement;
-    formError.hidden = true;
+    setElementVisibility(formError, false);
 
     if (noteToEdit) {
       modalTitle.textContent = 'Edit Note';
@@ -439,7 +466,7 @@
       setSelectedColour(DEFAULT_COLOUR);
     }
 
-    noteModal.hidden = false;
+    setElementVisibility(noteModal, true, 'flex');
     document.body.style.overflow = 'hidden';
 
     // Focus title field
@@ -449,9 +476,9 @@
   }
 
   function closeEditorModal() {
-    noteModal.hidden = true;
+    setElementVisibility(noteModal, false);
     document.body.style.overflow = '';
-    formError.hidden = true;
+    setElementVisibility(formError, false);
     if (lastActiveElement && typeof lastActiveElement.focus === 'function') {
       lastActiveElement.focus();
     }
@@ -492,12 +519,12 @@
 
     // Prevent saving notes with no meaningful content
     if (!title && !content) {
-      formError.hidden = false;
+      setElementVisibility(formError, true, 'block');
       noteTitleInput.focus();
       return;
     }
 
-    formError.hidden = true;
+    setElementVisibility(formError, false);
     const now = new Date().toISOString();
 
     if (id) {
@@ -542,7 +569,7 @@
     lastActiveElement = document.activeElement;
     noteToDeleteId = note.id;
     deleteNoteTargetTitle.textContent = note.title.trim() ? `"${note.title}"` : 'this note';
-    deleteModal.hidden = false;
+    setElementVisibility(deleteModal, true, 'flex');
     document.body.style.overflow = 'hidden';
 
     setTimeout(() => {
@@ -551,7 +578,7 @@
   }
 
   function closeDeleteModal() {
-    deleteModal.hidden = true;
+    setElementVisibility(deleteModal, false);
     document.body.style.overflow = '';
     noteToDeleteId = null;
     if (lastActiveElement && typeof lastActiveElement.focus === 'function') {
@@ -575,14 +602,14 @@
 
   function handleSearchInput(e) {
     searchQuery = e.target.value;
-    searchClearBtn.hidden = !searchQuery;
+    setElementVisibility(searchClearBtn, Boolean(searchQuery), 'flex');
     renderNotes();
   }
 
   function handleClearSearch() {
     searchQuery = '';
     searchInput.value = '';
-    searchClearBtn.hidden = true;
+    setElementVisibility(searchClearBtn, false);
     searchInput.focus();
     renderNotes();
   }
@@ -634,9 +661,9 @@
     // Keyboard handlers (Escape closes modals)
     document.addEventListener('keydown', (e) => {
       if (e.key === 'Escape') {
-        if (!noteModal.hidden) {
+        if (!noteModal.hidden && !noteModal.classList.contains('is-hidden')) {
           closeEditorModal();
-        } else if (!deleteModal.hidden) {
+        } else if (!deleteModal.hidden && !deleteModal.classList.contains('is-hidden')) {
           closeDeleteModal();
         }
       }
