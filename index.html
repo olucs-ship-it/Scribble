@@ -101,9 +101,15 @@
   <!-- Main Content Area -->
   <main class="app-main">
     <div class="main-container">
-      <!-- Notes Status / Counts -->
+      <!-- Notes Status / Counts + Category Filter -->
       <section class="notes-meta-bar" aria-live="polite">
         <div id="notes-counter" class="notes-counter">Loading notes...</div>
+        <div class="category-filter-wrapper" id="category-filter-wrapper" hidden>
+          <label for="category-filter" class="visually-hidden">Filter notes by category</label>
+          <select id="category-filter" class="category-filter">
+            <option value="">All categories</option>
+          </select>
+        </div>
       </section>
 
       <!-- Sticky Notes Grid -->
@@ -186,6 +192,21 @@
               placeholder="Jot down your thoughts here..."
               rows="6"
             ></textarea>
+          </div>
+
+          <!-- Category (optional grouping label) -->
+          <div class="form-field">
+            <label for="note-category-input" class="form-label">Category</label>
+            <input
+              type="text"
+              id="note-category-input"
+              class="form-input"
+              placeholder="e.g., Work, Personal, Project X"
+              maxlength="30"
+              list="category-suggestions"
+              autocomplete="off"
+            >
+            <datalist id="category-suggestions"></datalist>
           </div>
 
           <!-- Pastel Colour Selection -->

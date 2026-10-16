@@ -506,6 +506,39 @@ button, input, textarea, select {
   font-weight: 500;
 }
 
+/* Category Filter */
+.category-filter-wrapper {
+  display: flex;
+  align-items: center;
+}
+
+.category-filter {
+  padding: 7px 30px 7px 12px;
+  border: 1px solid var(--border-light);
+  border-radius: var(--radius-full);
+  background-color: var(--bg-surface);
+  color: var(--text-main);
+  font-size: 0.85rem;
+  font-weight: 500;
+  cursor: pointer;
+  appearance: none;
+  -webkit-appearance: none;
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 24 24' fill='none' stroke='%23848D95' stroke-width='2.5' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpolyline points='6 9 12 15 18 9'%3E%3C/polyline%3E%3C/svg%3E");
+  background-repeat: no-repeat;
+  background-position: right 10px center;
+  transition: border-color var(--transition-fast), background-color var(--transition-fast);
+}
+
+.category-filter:hover {
+  border-color: var(--text-dim);
+}
+
+.category-filter:focus {
+  outline: none;
+  border-color: var(--border-focus);
+  box-shadow: 0 0 0 3px var(--focus-ring);
+}
+
 /* ==========================================================================
    Sticky Notes Grid
    ========================================================================== */
@@ -599,6 +632,24 @@ button, input, textarea, select {
   overflow: hidden;
 }
 
+/* Category Badge */
+.note-category-badge {
+  display: inline-block;
+  align-self: flex-start;
+  max-width: 100%;
+  padding: 2px 10px;
+  margin-bottom: 8px;
+  border-radius: var(--radius-full);
+  font-size: 0.7rem;
+  font-weight: 600;
+  letter-spacing: 0.02em;
+  text-transform: uppercase;
+  color: #1F2421;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
 .note-title {
   font-size: 1.15rem;
   font-weight: 700;
@@ -682,6 +733,21 @@ button, input, textarea, select {
   font-size: 0.75rem;
   color: var(--note-text-muted);
   margin-top: 3px;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  flex-wrap: wrap;
+}
+
+.note-back-category {
+  display: inline-block;
+  padding: 1px 8px;
+  border-radius: var(--radius-full);
+  font-size: 0.68rem;
+  font-weight: 600;
+  letter-spacing: 0.02em;
+  text-transform: uppercase;
+  color: #1F2421;
 }
 
 .note-full-body {
@@ -1181,6 +1247,11 @@ button, input, textarea, select {
 
   .note-card {
     height: 270px;
+  }
+
+  .notes-meta-bar {
+    flex-wrap: wrap;
+    gap: 10px;
   }
 }
 

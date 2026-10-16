@@ -22,6 +22,7 @@
   // State
   let notes = [];
   let searchQuery = '';
+  let activeCategoryFilter = '';
   let noteToDeleteId = null;
   let lastActiveElement = null;
 
@@ -36,6 +37,11 @@
   const searchInput = document.getElementById('search-input');
   const searchClearBtn = document.getElementById('search-clear-btn');
   const resetSearchBtn = document.getElementById('reset-search-btn');
+
+  // Category Controls
+  const categoryFilter = document.getElementById('category-filter');
+  const categoryFilterWrapper = document.getElementById('category-filter-wrapper');
+  const categorySuggestions = document.getElementById('category-suggestions');
 
   // Header and Action Buttons
   const createNoteBtn = document.getElementById('create-note-btn');
@@ -54,6 +60,7 @@
   const noteIdInput = document.getElementById('note-id-input');
   const noteTitleInput = document.getElementById('note-title-input');
   const noteContentInput = document.getElementById('note-content-input');
+  const noteCategoryInput = document.getElementById('note-category-input');
   const formError = document.getElementById('form-error');
   const modalCardPreview = document.getElementById('modal-card-preview');
 
@@ -117,6 +124,7 @@
           title: String(item.title != null ? item.title : ''),
           content: String(item.content != null ? item.content : ''),
           color: String(item.color || DEFAULT_COLOUR),
+          category: String(item.category || ''),
           createdAt: item.createdAt || new Date().toISOString(),
           updatedAt: item.updatedAt || item.createdAt || new Date().toISOString()
         };
@@ -191,6 +199,92 @@
   }
 
   // ==========================================================================
+  // Category Helpers
+  // ==========================================================================
+
+  const CATEGORY_COLOURS = [
+    '#FFE08A', '#FFC9DE', '#B8DEFF', '#B5EFD0', '#D4C2FF', '#FFCFA3',
+    '#FFB4A2', '#A8E6CF', '#C7CEFF', '#FFE59F'
+  ];
+
+  /**
+   * Deterministically assigns a pastel colour to a category name
+   * @param {string} category
+   * @returns {string} hex colour
+   */
+  function categoryColour(category) {
+    if (!category) return 'transparent';
+    let hash = 0;
+    for (let i = 0; i < category.length; i++) {
+      hash = category.charCodeAt(i) + ((hash << 5) - hash);
+    }
+    return CATEGORY_COLOURS[Math.abs(hash) % CATEGORY_COLOURS.length];
+  }
+
+  /**
+   * Returns a sorted list of unique, non-empty categories from all notes
+   * @returns {string[]}
+   */
+  function getUniqueCategories() {
+    const set = new Set();
+    notes.forEach(n => {
+      const cat = (n.category || '').trim();
+      if (cat) set.add(cat);
+    });
+    return Array.from(set).sort((a, b) => a.localeCompare(b));
+  }
+
+  /**
+   * Rebuilds the category filter <select> and editor datalist
+   */
+  function refreshCategoryControls() {
+    const categories = getUniqueCategories();
+
+    // Filter dropdown — keep track of current selection
+    if (categoryFilter) {
+      const current = activeCategoryFilter;
+      categoryFilter.innerHTML = '';
+      const allOption = document.createElement('option');
+      allOption.value = '';
+      allOption.textContent = 'All categories';
+      categoryFilter.appendChild(allOption);
+      categories.forEach(cat => {
+        const opt = document.createElement('option');
+        opt.value = cat;
+        opt.textContent = cat;
+        categoryFilter.appendChild(opt);
+      });
+      // Preserve selection if still valid
+      if (categories.includes(current)) {
+        categoryFilter.value = current;
+      } else {
+        activeCategoryFilter = '';
+        categoryFilter.value = '';
+      }
+      // Show/hide the whole filter wrapper
+      setElementVisibility(categoryFilterWrapper, categories.length > 0, 'flex');
+    }
+
+    // Datalist suggestions for the editor input
+    if (categorySuggestions) {
+      categorySuggestions.innerHTML = '';
+      categories.forEach(cat => {
+        const opt = document.createElement('option');
+        opt.value = cat;
+        categorySuggestions.appendChild(opt);
+      });
+    }
+  }
+
+  /**
+   * Handles filter dropdown change
+   */
+  function handleCategoryFilterChange(e) {
+    activeCategoryFilter = e.target.value;
+    renderNotes();
+  }
+
+  // ==========================================================================
   // Render & Grid Management
   // ==========================================================================
 
@@ -199,9 +293,14 @@
    */
   function renderNotes() {
     const trimmedQuery = searchQuery.trim().toLowerCase();
-    
-    // Filter notes
+
+    // Refresh category dropdown & datalist from latest notes
+    refreshCategoryControls();
+
+    // Filter notes by category AND search query
     const filteredNotes = notes.filter(note => {
+      const matchesCategory = !activeCategoryFilter || (note.category || '') === activeCategoryFilter;
+      if (!matchesCategory) return false;
       if (!trimmedQuery) return true;
       const matchTitle = (note.title || '').toLowerCase().includes(trimmedQuery);
       const matchContent = (note.content || '').toLowerCase().includes(trimmedQuery);
@@ -209,9 +308,10 @@
     });
 
     // Update Counter
+    const isFiltered = Boolean(trimmedQuery || activeCategoryFilter);
     if (notes.length === 0) {
       notesCounter.textContent = '0 notes';
-    } else if (trimmedQuery) {
+    } else if (isFiltered) {
       notesCounter.textContent = `Showing ${filteredNotes.length} of ${notes.length} note${notes.length === 1 ? '' : 's'}`;
     } else {
       notesCounter.textContent = `${notes.length} note${notes.length === 1 ? '' : 's'}`;
@@ -283,6 +383,15 @@
     const frontContent = document.createElement('div');
     frontContent.className = 'note-front-content';
 
+    // Category badge (only if the note has a category)
+    if (note.category && note.category.trim()) {
+      const badge = document.createElement('span');
+      badge.className = 'note-category-badge';
+      badge.textContent = note.category;
+      badge.style.backgroundColor = categoryColour(note.category);
+      frontContent.appendChild(badge);
+    }
+
     const titleEl = document.createElement('h3');
     titleEl.className = 'note-title';
     if (note.title.trim()) {
@@ -338,11 +447,23 @@
 
     const backMeta = document.createElement('div');
     backMeta.className = 'note-back-meta';
+
+    // Category chip on the back (only if the note has a category)
+    if (note.category && note.category.trim()) {
+      const backCat = document.createElement('span');
+      backCat.className = 'note-back-category';
+      backCat.textContent = note.category;
+      backCat.style.backgroundColor = categoryColour(note.category);
+      backMeta.appendChild(backCat);
+    }
+
     const createdText = formatDate(note.createdAt);
     const updatedText = formatDate(note.updatedAt);
-    backMeta.textContent = note.updatedAt && note.updatedAt !== note.createdAt
+    const dateSpan = document.createElement('span');
+    dateSpan.textContent = note.updatedAt && note.updatedAt !== note.createdAt
       ? `Updated ${updatedText}`
       : `Created ${createdText}`;
+    backMeta.appendChild(dateSpan);
     backHeader.appendChild(backMeta);
 
     back.appendChild(backHeader);
@@ -462,12 +583,14 @@
       noteIdInput.value = noteToEdit.id;
       noteTitleInput.value = noteToEdit.title;
       noteContentInput.value = noteToEdit.content;
+      noteCategoryInput.value = noteToEdit.category || '';
       setSelectedColour(noteToEdit.color);
     } else {
       modalTitle.textContent = 'New Note';
       noteIdInput.value = '';
       noteTitleInput.value = '';
       noteContentInput.value = '';
+      noteCategoryInput.value = '';
       setSelectedColour(DEFAULT_COLOUR);
     }
 
@@ -520,6 +643,7 @@
     const title = noteTitleInput.value.trim();
     const content = noteContentInput.value.trim();
     const color = getSelectedColour();
+    const category = noteCategoryInput.value.trim();
     const id = noteIdInput.value;
 
     // Prevent saving notes with no meaningful content
@@ -541,6 +665,7 @@
           title: title,
           content: content,
           color: color,
+          category: category,
           updatedAt: now
         };
         persistNotesToStorage(notes);
@@ -553,6 +678,7 @@
         title: title,
         content: content,
         color: color,
+        category: category,
         createdAt: now,
         updatedAt: now
       };
@@ -668,6 +794,11 @@
     searchInput.addEventListener('input', handleSearchInput);
     searchClearBtn.addEventListener('click', handleClearSearch);
     resetSearchBtn.addEventListener('click', handleClearSearch);
+
+    // Category filter
+    if (categoryFilter) {
+      categoryFilter.addEventListener('change', handleCategoryFilterChange);
+    }
 
     // Create Note buttons
     createNoteBtn.addEventListener('click', () => openEditorModal(null));
