@@ -4,19 +4,27 @@
    ========================================================================== */
 
 :root {
+  color-scheme: light;
+
   /* Warm off-white theme */
   --bg-app: #FAF8F5;
   --bg-surface: #FFFFFF;
   --bg-surface-subtle: #F4F1EC;
+  --bg-surface-subtle-hover: #EEEBE5;
   
   /* Text and contrast */
   --text-main: #1F2421;
   --text-muted: #5C646C;
   --text-dim: #848D95;
 
+  /* Sticky Note ink colors (ensures high contrast on pastel stickies) */
+  --note-text-main: #1F2421;
+  --note-text-muted: #5C646C;
+
   /* Borders & Shadows */
   --border-light: #E7E3DC;
   --border-focus: #1F2421;
+  --focus-ring: rgba(31, 36, 33, 0.08);
   --shadow-subtle: 0 2px 8px rgba(0, 0, 0, 0.04), 0 1px 2px rgba(0, 0, 0, 0.04);
   --shadow-card: 0 6px 16px rgba(0, 0, 0, 0.06), 0 1px 3px rgba(0, 0, 0, 0.05);
   --shadow-card-hover: 0 10px 24px rgba(0, 0, 0, 0.09), 0 2px 6px rgba(0, 0, 0, 0.06);
@@ -37,6 +45,15 @@
   --danger-color: #D32F2F;
   --danger-hover: #B71C1C;
 
+  /* Theme Toggle */
+  --toggle-btn-bg: #FFFFFF;
+  --toggle-btn-hover: #F4F1EC;
+  --toggle-track-bg: #EAE6DF;
+  --toggle-track-border: #DDD8D0;
+  --toggle-thumb-bg: #FFFFFF;
+  --toggle-sun-color: #E68A00;
+  --toggle-moon-color: #6366F1;
+
   /* Radii */
   --radius-sm: 6px;
   --radius-md: 10px;
@@ -47,6 +64,48 @@
   --transition-fast: 0.15s ease;
   --transition-normal: 0.25s ease;
   --flip-duration: 0.5s;
+}
+
+/* ==========================================================================
+   Dark Theme
+   ========================================================================== */
+
+[data-theme="dark"] {
+  color-scheme: dark;
+
+  /* Deep slate/charcoal dark theme */
+  --bg-app: #121514;
+  --bg-surface: #1A1F1D;
+  --bg-surface-subtle: #242B28;
+  --bg-surface-subtle-hover: #2E3733;
+
+  /* Text and contrast */
+  --text-main: #F4F2EE;
+  --text-muted: #9FA8A2;
+  --text-dim: #6F7872;
+
+  /* Borders & Shadows */
+  --border-light: #2A332F;
+  --border-focus: #F4F2EE;
+  --focus-ring: rgba(244, 242, 238, 0.12);
+  --shadow-subtle: 0 2px 8px rgba(0, 0, 0, 0.35), 0 1px 2px rgba(0, 0, 0, 0.25);
+  --shadow-card: 0 6px 18px rgba(0, 0, 0, 0.45), 0 1px 4px rgba(0, 0, 0, 0.3);
+  --shadow-card-hover: 0 12px 28px rgba(0, 0, 0, 0.6), 0 3px 8px rgba(0, 0, 0, 0.4);
+  --shadow-modal: 0 20px 48px rgba(0, 0, 0, 0.75), 0 4px 16px rgba(0, 0, 0, 0.5);
+
+  /* Buttons & accents in dark mode */
+  --primary-btn-bg: #F4F2EE;
+  --primary-btn-text: #121514;
+  --primary-btn-hover: #FFFFFF;
+
+  /* Theme Toggle in dark mode */
+  --toggle-btn-bg: #1A1F1D;
+  --toggle-btn-hover: #242B28;
+  --toggle-track-bg: #2B3530;
+  --toggle-track-border: #3A4740;
+  --toggle-thumb-bg: #131715;
+  --toggle-sun-color: #FBBF24;
+  --toggle-moon-color: #93C5FD;
 }
 
 /* ==========================================================================
@@ -73,6 +132,17 @@ body {
   display: flex;
   flex-direction: column;
   overflow-x: hidden;
+  transition: background-color 0.35s ease, color 0.35s ease;
+}
+
+.app-header,
+.modal-card,
+.toast,
+.search-input,
+.theme-toggle-btn,
+.theme-toggle-track,
+.theme-toggle-thumb {
+  transition: background-color 0.35s ease, border-color 0.35s ease, color 0.35s ease, box-shadow 0.35s ease;
 }
 
 /* Apply Roboto to all controls */
@@ -214,13 +284,13 @@ button, input, textarea, select {
 }
 
 .search-input:hover {
-  background-color: #EEEBE5;
+  background-color: var(--bg-surface-subtle-hover);
 }
 
 .search-input:focus {
   background-color: var(--bg-surface);
   border-color: var(--border-light);
-  box-shadow: 0 0 0 3px rgba(31, 36, 33, 0.08);
+  box-shadow: 0 0 0 3px var(--focus-ring);
   outline: none;
 }
 
@@ -242,6 +312,116 @@ button, input, textarea, select {
 
 .search-clear-btn:hover {
   color: var(--text-main);
+}
+
+/* Header Actions */
+.header-actions {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+/* Theme Toggle Switch */
+.theme-toggle-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  height: 40px;
+  padding: 0 12px;
+  background-color: var(--toggle-btn-bg);
+  border: 1px solid var(--border-light);
+  border-radius: var(--radius-full);
+  color: var(--text-main);
+  cursor: pointer;
+  font-size: 0.85rem;
+  font-weight: 500;
+  transition: all var(--transition-fast);
+  user-select: none;
+  box-shadow: var(--shadow-subtle);
+}
+
+.theme-toggle-btn:hover {
+  background-color: var(--toggle-btn-hover);
+  border-color: var(--border-light);
+  transform: translateY(-1px);
+}
+
+.theme-toggle-btn:active {
+  transform: translateY(0);
+}
+
+.theme-toggle-btn:focus-visible {
+  outline: 2px solid var(--border-focus);
+  outline-offset: 2px;
+}
+
+.theme-toggle-track {
+  position: relative;
+  display: inline-block;
+  width: 44px;
+  height: 24px;
+  background-color: var(--toggle-track-bg);
+  border: 1px solid var(--toggle-track-border);
+  border-radius: var(--radius-full);
+  transition: background-color var(--transition-normal), border-color var(--transition-normal);
+  flex-shrink: 0;
+}
+
+.theme-toggle-thumb {
+  position: absolute;
+  top: 2px;
+  left: 2px;
+  width: 18px;
+  height: 18px;
+  border-radius: 50%;
+  background-color: var(--toggle-thumb-bg);
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.2);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: transform 0.28s cubic-bezier(0.34, 1.56, 0.64, 1),
+              background-color var(--transition-normal);
+}
+
+[data-theme="dark"] .theme-toggle-thumb {
+  transform: translateX(20px);
+}
+
+.theme-icon {
+  width: 12px;
+  height: 12px;
+  position: absolute;
+  transition: opacity var(--transition-fast), transform var(--transition-normal);
+}
+
+.icon-sun {
+  color: var(--toggle-sun-color);
+  opacity: 1;
+  transform: rotate(0deg) scale(1);
+}
+
+.icon-moon {
+  color: var(--toggle-moon-color);
+  opacity: 0;
+  transform: rotate(-90deg) scale(0.5);
+}
+
+[data-theme="dark"] .icon-sun {
+  opacity: 0;
+  transform: rotate(90deg) scale(0.5);
+}
+
+[data-theme="dark"] .icon-moon {
+  opacity: 1;
+  transform: rotate(0deg) scale(1);
+}
+
+.theme-toggle-text {
+  font-size: 0.85rem;
+  font-weight: 500;
+  color: var(--text-main);
+  min-width: 32px;
+  text-align: left;
 }
 
 /* Buttons */
@@ -348,7 +528,7 @@ button, input, textarea, select {
 }
 
 .note-card:focus-visible .note-card-inner {
-  box-shadow: 0 0 0 3px #1F2421, var(--shadow-card-hover);
+  box-shadow: 0 0 0 3px var(--border-focus), var(--shadow-card-hover);
 }
 
 .note-card-inner {
@@ -423,7 +603,7 @@ button, input, textarea, select {
   font-size: 1.15rem;
   font-weight: 700;
   line-height: 1.3;
-  color: var(--text-main);
+  color: var(--note-text-main);
   margin-bottom: 10px;
   word-break: break-word;
   display: -webkit-box;
@@ -434,13 +614,13 @@ button, input, textarea, select {
 
 .note-title-empty {
   font-style: italic;
-  color: var(--text-muted);
+  color: var(--note-text-muted);
   font-weight: 500;
 }
 
 .note-preview-body {
   font-size: 0.94rem;
-  color: var(--text-main);
+  color: var(--note-text-main);
   line-height: 1.5;
   white-space: pre-wrap;
   word-break: break-word;
@@ -459,7 +639,7 @@ button, input, textarea, select {
   padding-top: 10px;
   border-top: 1px dashed rgba(0, 0, 0, 0.1);
   font-size: 0.78rem;
-  color: var(--text-muted);
+  color: var(--note-text-muted);
 }
 
 .note-date {
@@ -471,7 +651,7 @@ button, input, textarea, select {
   align-items: center;
   gap: 5px;
   font-weight: 500;
-  color: var(--text-main);
+  color: var(--note-text-main);
   opacity: 0.75;
   transition: opacity var(--transition-fast);
 }
@@ -493,14 +673,14 @@ button, input, textarea, select {
 .note-back-title {
   font-size: 1.15rem;
   font-weight: 700;
-  color: var(--text-main);
+  color: var(--note-text-main);
   word-break: break-word;
   line-height: 1.3;
 }
 
 .note-back-meta {
   font-size: 0.75rem;
-  color: var(--text-muted);
+  color: var(--note-text-muted);
   margin-top: 3px;
 }
 
@@ -508,7 +688,7 @@ button, input, textarea, select {
   flex: 1;
   font-size: 0.94rem;
   line-height: 1.5;
-  color: var(--text-main);
+  color: var(--note-text-main);
   white-space: pre-wrap;
   word-break: break-word;
   overflow-y: auto;
@@ -546,7 +726,7 @@ button, input, textarea, select {
   display: inline-flex;
   align-items: center;
   gap: 4px;
-  color: var(--text-main);
+  color: var(--note-text-main);
   transition: background var(--transition-fast), transform var(--transition-fast);
 }
 
@@ -725,6 +905,48 @@ button, input, textarea, select {
   transition: background-color var(--transition-normal);
 }
 
+/* Editor modal always sits on a pastel note-colour background — force dark ink for readability in both themes */
+#modal-card-preview .modal-title,
+#modal-card-preview .form-label {
+  color: #1F2421;
+}
+
+#modal-card-preview .form-input,
+#modal-card-preview .form-textarea {
+  background-color: rgba(255, 255, 255, 0.55);
+  border-color: rgba(0, 0, 0, 0.15);
+  color: #1F2421;
+}
+
+#modal-card-preview .form-input::placeholder,
+#modal-card-preview .form-textarea::placeholder {
+  color: #5C646C;
+}
+
+#modal-card-preview .form-input:focus,
+#modal-card-preview .form-textarea:focus {
+  border-color: #1F2421;
+  box-shadow: 0 0 0 3px rgba(31, 36, 33, 0.1);
+}
+
+#modal-card-preview .modal-icon-btn {
+  color: #5C646C;
+}
+
+#modal-card-preview .modal-icon-btn:hover {
+  background-color: rgba(255, 255, 255, 0.6);
+  color: #1F2421;
+}
+
+#modal-card-preview .btn-secondary {
+  border-color: rgba(0, 0, 0, 0.2);
+  color: #1F2421;
+}
+
+#modal-card-preview .btn-secondary:hover {
+  background-color: rgba(255, 255, 255, 0.5);
+}
+
 .modal-header {
   display: flex;
   align-items: center;
@@ -890,7 +1112,7 @@ button, input, textarea, select {
 .toast {
   pointer-events: auto;
   background-color: var(--primary-btn-bg);
-  color: #FFFFFF;
+  color: var(--primary-btn-text);
   padding: 10px 18px;
   border-radius: var(--radius-full);
   font-size: 0.88rem;
@@ -973,5 +1195,13 @@ button, input, textarea, select {
 
   .modal-actions .btn {
     width: 100%;
+  }
+
+  .theme-toggle-text {
+    display: none;
+  }
+
+  .theme-toggle-btn {
+    padding: 0 10px;
   }
 }

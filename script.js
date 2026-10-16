@@ -8,6 +8,7 @@
 
   // Constants
   const STORAGE_KEY = 'scribble-notes';
+  const THEME_STORAGE_KEY = 'scribble-theme';
   const DEFAULT_COLOUR = '#FFF2B2'; // Pastel Yellow
   const PALETTE = [
     { name: 'Yellow', hex: '#FFF2B2' },
@@ -39,6 +40,10 @@
   // Header and Action Buttons
   const createNoteBtn = document.getElementById('create-note-btn');
   const emptyCreateBtn = document.getElementById('empty-create-btn');
+
+  // Theme Toggle Elements
+  const themeToggleBtn = document.getElementById('theme-toggle-btn');
+  const themeToggleText = document.getElementById('theme-toggle-text');
 
   // Editor Modal Elements
   const noteModal = document.getElementById('note-modal');
@@ -597,6 +602,46 @@
   }
 
   // ==========================================================================
+  // Theme Toggle (Light / Dark Mode)
+  // ==========================================================================
+
+  function getStoredTheme() {
+    try {
+      return localStorage.getItem(THEME_STORAGE_KEY);
+    } catch {
+      return null;
+    }
+  }
+
+  function storeTheme(theme) {
+    try {
+      localStorage.setItem(THEME_STORAGE_KEY, theme);
+    } catch {
+      /* storage unavailable */
+    }
+  }
+
+  function applyTheme(theme) {
+    document.documentElement.setAttribute('data-theme', theme);
+    const isDark = theme === 'dark';
+    if (themeToggleBtn) {
+      themeToggleBtn.setAttribute('aria-checked', String(isDark));
+      themeToggleBtn.setAttribute('aria-label', isDark ? 'Switch to light mode' : 'Switch to dark mode');
+      themeToggleBtn.setAttribute('title', isDark ? 'Switch to light mode' : 'Switch to dark mode');
+    }
+    if (themeToggleText) {
+      themeToggleText.textContent = isDark ? 'Dark' : 'Light';
+    }
+  }
+
+  function toggleTheme() {
+    const current = document.documentElement.getAttribute('data-theme') || 'light';
+    const next = current === 'dark' ? 'light' : 'dark';
+    applyTheme(next);
+    storeTheme(next);
+  }
+
+  // ==========================================================================
   // Search Interaction
   // ==========================================================================
 
@@ -627,6 +672,11 @@
     // Create Note buttons
     createNoteBtn.addEventListener('click', () => openEditorModal(null));
     emptyCreateBtn.addEventListener('click', () => openEditorModal(null));
+
+    // Theme toggle
+    if (themeToggleBtn) {
+      themeToggleBtn.addEventListener('click', toggleTheme);
+    }
 
     // Form
     noteForm.addEventListener('submit', handleFormSubmit);
@@ -675,6 +725,20 @@
   // ==========================================================================
 
   function init() {
+    // Apply stored or system theme, then sync toggle UI
+    const storedTheme = getStoredTheme();
+    const prefersDark = window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches;
+    applyTheme(storedTheme || (prefersDark ? 'dark' : 'light'));
+
+    // Follow OS theme change only when the user hasn't set a manual preference
+    if (window.matchMedia) {
+      window.matchMedia('(prefers-color-scheme: dark)').addEventListener('change', (e) => {
+        if (!getStoredTheme()) {
+          applyTheme(e.matches ? 'dark' : 'light');
+        }
+      });
+    }
+
     notes = loadNotesFromStorage();
     initEventListeners();
     renderNotes();
