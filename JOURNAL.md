@@ -187,16 +187,103 @@ This file. Documents the *why* behind the decisions, not just the *what*.
 
 ---
 
+## Entry 7 — Light / Dark Mode Toggle
+**Date:** 16 October 2026
+
+### What I Built
+
+A smooth, animated light/dark mode toggle in the header — a pill switch with a sliding thumb, sun/moon icons, and a text label. The preference persists in `localStorage` (`scribble-theme`) and falls back to the OS `prefers-color-scheme` on first visit. An inline `<head>` script applies the stored theme before the first paint so there's no flash-of-wrong-theme.
+
+### Design Decisions
+
+| Decision | Choice | Reason |
+|----------|--------|--------|
+| Toggle style | Pill switch (track + sliding thumb) | Familiar, tactile, and visually distinct from icon-only buttons |
+| Theme scope | `data-theme` attribute on `<html>` | Allows `[data-theme="dark"]` to override CSS custom properties cleanly |
+| No-flash strategy | Inline `<head>` script | Runs before body renders; avoids a visible light→dark flash |
+| System sync | `matchMedia('(prefers-color-scheme: dark)')` | Follows OS setting until the user makes a manual choice |
+| Transition | `0.35s ease` on body, header, modals, and toggle | Smooth crossfade without being sluggish |
+
+### CSS Architecture
+
+All colours were already tokens (`--bg-app`, `--text-main`, etc.), so adding dark mode meant only defining an override block:
+
+```css
+[data-theme="dark"] {
+  --bg-app: #121514;
+  --bg-surface: #1A1F1D;
+  --text-main: #F4F2EE;
+  --primary-btn-bg: #F4F2EE;
+  --primary-btn-text: #121514;
+  /* ... */
+}
+```
+
+Sticky notes keep their pastel colours in dark mode (like physical stickies on a dark desk), so I introduced `--note-text-main` and `--note-text-muted` that always stay dark for readability on pastel backgrounds.
+
+### The Editor Modal Problem
+
+The editor modal card gets a pastel background colour set via JS. In dark mode, `--text-main` becomes light — making it unreadable on pastel. Fixed by forcing dark ink on all elements inside `#modal-card-preview`:
+
+```css
+#modal-card-preview .modal-title,
+#modal-card-preview .form-label { color: #1F2421; }
+#modal-card-preview .form-input  { color: #1F2421; background: rgba(255,255,255,0.55); }
+```
+
+### Lesson Learned
+
+> Design tokens pay dividends. Because every colour was already a CSS variable, the entire dark theme was ~40 lines of overrides — no need to touch individual component rules.
+
+---
+
+## Entry 8 — Note Categories
+**Date:** 16 October 2026
+
+### What I Built
+
+An optional `category` field on each note. Users can assign a short label (e.g. "Work", "Personal", "Project X") in the editor. Notes display a colour-coded pill badge on the front and a chip on the back. A filter dropdown in the meta bar lets users view only notes in a selected category.
+
+### Design Decisions
+
+| Decision | Choice | Reason |
+|----------|--------|--------|
+| Data shape | Single `category` string per note | Simpler than an array of tags; matches "group by" use case |
+| Category colour | Deterministic hash → pastel palette | Same category always gets the same colour; no extra storage needed |
+| Filter UI | Native `<select>` dropdown | Accessible, keyboard-navigable, no custom component overhead |
+| Editor input | `<input>` with `<datalist>` | Free-text entry with autocomplete suggestions from existing categories |
+| Empty category | Stored as `""` | Notes without a category simply don't show a badge or chip |
+
+### Backward Compatibility
+
+Existing notes in `localStorage` don't have a `category` field. The normalizer in `loadNotesFromStorage()` adds one:
+
+```js
+category: String(item.category || ''),
+```
+
+This means old notes load cleanly without a category, and new categories can be added to them later via edit.
+
+### The Filter + Search Interaction
+
+Category filtering and text search work together (AND logic). The counter updates to show *"Showing X of Y notes"* whenever either filter is active. When a category is deleted from all its notes, the filter dropdown resets to "All categories" and hides itself if no categories remain.
+
+### Lesson Learned
+
+> Deriving UI state from the data (categories are always computed from existing notes) avoids sync bugs. There's no separate "categories list" to keep in `localStorage` — if a category has no notes, it simply doesn't exist.
+
+---
+
 ## What I'd Add in a Future Version
 
-| Feature | Notes |
-|---------|-------|
-| Pin notes | Allow certain notes to float to the top of the grid |
-| Note categories / tags | Group notes by project or topic |
-| Light/dark mode toggle | Auto-detect `prefers-color-scheme` |
-| Export notes | Download notes as a `.txt` or `.json` file |
-| Note ordering | Drag to reorder notes within the grid |
-| Character count | Show remaining characters in the textarea |
+| Feature | Notes | Status |
+|---------|-------|--------|
+| ~~Pin notes~~ | ~~Allow certain notes to float to the top of the grid~~ | Planned |
+| ~~Note categories / tags~~ | ~~Group notes by project or topic~~ | ✅ Done (Entry 8) |
+| ~~Light/dark mode toggle~~ | ~~Auto-detect `prefers-color-scheme`~~ | ✅ Done (Entry 7) |
+| Export notes | Download notes as a `.txt` or `.json` file | Planned |
+| Note ordering | Drag to reorder notes within the grid | Planned |
+| Character count | Show remaining characters in the textarea | Planned |
 
 ---
 
