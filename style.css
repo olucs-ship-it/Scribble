@@ -1108,6 +1108,38 @@ button, input, textarea, select {
   min-height: 120px;
 }
 
+/* Character Counter */
+.char-counter {
+  font-size: 0.78rem;
+  color: var(--text-dim);
+  text-align: right;
+  margin-top: 4px;
+  font-weight: 500;
+  transition: color var(--transition-fast);
+  user-select: none;
+}
+
+.char-counter.char-warning {
+  color: #B45309;
+}
+
+.char-counter.char-critical {
+  color: var(--danger-color);
+  font-weight: 600;
+}
+
+#modal-card-preview .char-counter {
+  color: #5C646C;
+}
+
+#modal-card-preview .char-counter.char-warning {
+  color: #92400E;
+}
+
+#modal-card-preview .char-counter.char-critical {
+  color: #CF1322;
+}
+
 /* Colour Picker Swatches */
 .colour-picker {
   display: flex;
@@ -1256,15 +1288,57 @@ button, input, textarea, select {
 }
 
 @media (max-width: 480px) {
+  .header-inner {
+    padding: 10px 12px;
+    gap: 10px;
+  }
+
+  .brand-title {
+    font-size: 1.25rem;
+  }
+
+  .brand-tagline {
+    font-size: 0.68rem;
+  }
+
+  .brand-icon {
+    width: 28px;
+    height: 28px;
+  }
+
+  .icon-sheet {
+    width: 22px;
+    height: 22px;
+  }
+
+  .app-main {
+    padding: 16px 12px 32px;
+  }
+
   .notes-grid {
     grid-template-columns: 1fr;
+    gap: 14px;
   }
 
-  .modal-actions {
-    flex-direction: column-reverse;
+  .note-card {
+    height: 250px;
   }
 
-  .modal-actions .btn {
+  .note-face {
+    padding: 16px;
+  }
+
+  .notes-meta-bar {
+    flex-direction: column;
+    align-items: stretch;
+    gap: 8px;
+  }
+
+  .category-filter-wrapper {
+    width: 100%;
+  }
+
+  .category-filter {
     width: 100%;
   }
 
@@ -1274,5 +1348,54 @@ button, input, textarea, select {
 
   .theme-toggle-btn {
     padding: 0 10px;
+  }
+
+  .modal-backdrop {
+    padding: 12px;
+    align-items: flex-end;
+  }
+
+  .modal-card {
+    padding: 20px 16px;
+    border-radius: var(--radius-lg) var(--radius-lg) 0 0;
+  }
+
+  .modal-actions {
+    flex-direction: column-reverse;
+  }
+
+  .modal-actions .btn {
+    width: 100%;
+    min-height: 48px;
+  }
+
+  .btn {
+    min-height: 44px;
+  }
+
+  .colour-swatch {
+    width: 32px;
+    height: 32px;
+  }
+
+  .toast-container {
+    bottom: calc(16px + env(safe-area-inset-bottom, 0px));
+    right: 12px;
+    left: 12px;
+  }
+
+  .toast {
+    text-align: center;
+    justify-content: center;
+  }
+
+  .search-input {
+    font-size: 16px;
+  }
+
+  .form-input,
+  .form-textarea,
+  .category-filter {
+    font-size: 16px;
   }
 }

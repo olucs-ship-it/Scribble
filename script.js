@@ -10,6 +10,7 @@
   const STORAGE_KEY = 'scribble-notes';
   const THEME_STORAGE_KEY = 'scribble-theme';
   const DEFAULT_COLOUR = '#FFF2B2'; // Pastel Yellow
+  const MAX_CONTENT_LENGTH = 500;
   const PALETTE = [
     { name: 'Yellow', hex: '#FFF2B2' },
     { name: 'Pink', hex: '#FFDCE5' },
@@ -63,6 +64,7 @@
   const noteCategoryInput = document.getElementById('note-category-input');
   const formError = document.getElementById('form-error');
   const modalCardPreview = document.getElementById('modal-card-preview');
+  const charCounter = document.getElementById('char-counter');
 
   // Delete Modal Elements
   const deleteModal = document.getElementById('delete-modal');
@@ -596,6 +598,7 @@
 
     setElementVisibility(noteModal, true, 'flex');
     document.body.style.overflow = 'hidden';
+    updateCharCounter();
 
     // Focus title field
     setTimeout(() => {
@@ -728,6 +731,22 @@
   }
 
   // ==========================================================================
+  // Character Counter
+  // ==========================================================================
+
+  function updateCharCounter() {
+    if (!charCounter || !noteContentInput) return;
+    const remaining = MAX_CONTENT_LENGTH - noteContentInput.value.length;
+    charCounter.textContent = `${remaining} character${remaining === 1 ? '' : 's'} remaining`;
+    charCounter.classList.remove('char-warning', 'char-critical');
+    if (remaining <= 30) {
+      charCounter.classList.add('char-critical');
+    } else if (remaining <= 100) {
+      charCounter.classList.add('char-warning');
+    }
+  }
+
+  // ==========================================================================
   // Theme Toggle (Light / Dark Mode)
   // ==========================================================================
 
@@ -813,6 +832,9 @@
     noteForm.addEventListener('submit', handleFormSubmit);
     modalCancelBtn.addEventListener('click', closeEditorModal);
     modalCloseBtn.addEventListener('click', closeEditorModal);
+
+    // Character counter
+    noteContentInput.addEventListener('input', updateCharCounter);
 
     // Colour selection change listener for modal background
     noteForm.querySelectorAll('input[name="note-colour"]').forEach(radio => {

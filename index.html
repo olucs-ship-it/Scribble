@@ -2,7 +2,7 @@
 <html lang="en">
 <head>
   <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
   <title>Scribble — Pastel Sticky Notes</title>
   <meta name="description" content="A minimalist, colourful pastel sticky notes web app to capture, flip, organise, and search your thoughts with ease.">
   <link rel="preconnect" href="https://fonts.googleapis.com">
@@ -191,7 +191,9 @@
               class="form-textarea"
               placeholder="Jot down your thoughts here..."
               rows="6"
+              maxlength="500"
             ></textarea>
+            <div class="char-counter" id="char-counter" aria-live="polite">500 characters remaining</div>
           </div>
 
           <!-- Category (optional grouping label) -->
